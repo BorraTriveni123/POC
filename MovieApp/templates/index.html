@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Movie App</h1>
+
+    <h3>Add Movie</h3>
+    <input type="text" id="name" placeholder="Movie Name">
+    <input type="text" id="rating" placeholder="Rating">
+    <button onclick="addMovie()">Add</button>
+
+    <h3>Movies List</h3>
+    <table id="moviesTable">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Rating</th>
+            <th>Actions</th>
+        </tr>
+    </table>
+
+    <script>
+        async function fetchMovies() {
+            const res = await fetch('/movies');
+            const movies = await res.json();
+            const table = document.getElementById('moviesTable');
+            table.innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>`;
+            movies.forEach(movie => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${movie.id}</td>
+                        <td><input type="text" id="name-${movie.id}" value="${movie.name}"></td>
+                        <td><input type="text" id="rating-${movie.id}" value="${movie.rating}"></td>
+                        <td>
+                            <button class="action-btn update-btn" onclick="updateMovie(${movie.id})">Update</button>
+                            <button class="action-btn delete-btn" onclick="deleteMovie(${movie.id})">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function addMovie() {
+            const name = document.getElementById('name').value;
+            const rating = document.getElementById('rating').value;
+            if (!name || !rating) { alert("Please fill both fields"); return; }
+
+            await fetch('/movies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, rating })
+            });
+            document.getElementById('name').value = '';
+            document.getElementById('rating').value = '';
+            fetchMovies();
+        }
+
+        async function updateMovie(id) {
+            const name = document.getElementById(`name-${id}`).value;
+            const rating = document.getElementById(`rating-${id}`).value;
+
+            await fetch(`/movies/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, rating })
+            });
+            fetchMovies();
+        }
+
+        async function deleteMovie(id) {
+            await fetch(`/movies/${id}`, { method: 'DELETE' });
+            fetchMovies();
+        }
+
+        fetchMovies();
+    </script>
+</body>
+</html>
