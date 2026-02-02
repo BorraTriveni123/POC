@@ -12,7 +12,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t movie-app .'
+                sh 'docker build -t movie-api .'
             }
         }
 
@@ -23,7 +23,7 @@ pipeline {
                     ssh ubuntu@15.134.218.173 "
                       docker stop movie || true
                       docker rm movie || true
-                      docker run -d -p 5000:5000 --name movie movie-app
+                      docker run -d -p 5000:5000 --name movie movie-api
                       exit
                     "
                     '''
@@ -32,6 +32,7 @@ pipeline {
         }
     }
 }
+
 
 
 
