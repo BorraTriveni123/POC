@@ -1,41 +1,66 @@
 pipeline {
     agent any
 
+    environment {
+        // Name of your Docker image
+        DOCKER_IMAGE = "movie-app"
+        // EC2 server details
+        EC2_USER = "ubuntu"
+        EC2_HOST = "15.134.218.173"
+        // Path on EC2 where the app will live
+        EC2_APP_DIR = "/home/ubuntu/POC/MovieApp"
+    }
+
     stages {
+
         stage('Clone Repo') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/BorraTriveni123/POC.git'
-                
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t movie-api .'
+                echo "Building Docker image ${DOCKER_IMAGE}"
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ec2-ssh-key']) {
-                    sh '''
-                    ssh ubuntu@15.134.218.173 "
-                      cd ~/POC/MovieApp
-                      docker build -t movie-api .
-                      docker stop movie || true
-                      docker rm movie || true
-                      docker run -d -p 5000:5000 --movie movie-api
-                      exit
-                    "
-                    '''
+                    echo "Deploying Docker image to EC2..."
+                    sh """
+                    ssh ${EC2_USER}@${EC2_HOST} '
+                        # Navigate to app directory
+                        cd ${EC2_APP_DIR} || mkdir -p ${EC2_APP_DIR}
+                        
+                        # Stop existing container if it exists
+                        docker stop ${DOCKER_IMAGE} || true
+                        docker rm ${DOCKER_IMAGE} || true
+
+                        # Copy latest files from Jenkins workspace (optional)
+                        # rsync -avz --exclude=.git ./ ${EC2_APP_DIR}/
+
+                        # Pull latest image from Jenkins server if pushing to registry
+                        # docker pull <your-dockerhub-username>/${DOCKER_IMAGE}:latest
+
+                        # Run container
+                        docker run -d -p 5000:5000 --name ${DOCKER_IMAGE} ${DOCKER_IMAGE}
+                    '
+                    """
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo "Deployment completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check logs for errors."
+        }
+    }
 }
-
-
-
-
-
