@@ -34,7 +34,7 @@ pipeline {
                     """
 
                     // Run the container
-                    sh "docker run -d --name ${CONTAINER_NAME} -p ${PORT}:${PORT} ${IMAGE_NAME}"
+                    sh "docker run -d -p ${PORT}:${PORT} ${IMAGE_NAME}"
                 }
             }
         }
@@ -55,3 +55,4 @@ pipeline {
         }
     }
 }
+
