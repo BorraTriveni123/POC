@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image from MovieApp folder
-                    sh "docker build -t ${IMAGE_NAME} ./MovieApp"
+                    bat "docker build -t ${IMAGE_NAME} ./MovieApp"
                 }
             }
         }
@@ -34,14 +34,14 @@ pipeline {
                     """
 
                     // Run the container
-                    sh "docker run -d -p ${PORT}:${PORT} ${IMAGE_NAME}"
+                    bat "docker run -d -p ${PORT}:${PORT} ${IMAGE_NAME}"
                 }
             }
         }
 
         stage('Verify Container') {
             steps {
-                sh "docker ps"
+                bat "docker ps"
             }
         }
     }
@@ -55,4 +55,5 @@ pipeline {
         }
     }
 }
+
 
