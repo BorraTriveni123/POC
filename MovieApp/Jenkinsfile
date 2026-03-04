@@ -1,35 +1,57 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "movie-api"
+        CONTAINER_NAME = "movie-api"
+        PORT = "5000"
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/BorraTriveni123/POC.git'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t movie-api ./MovieApp'
+                script {
+                    // Build Docker image from MovieApp folder
+                    sh "docker build -t ${IMAGE_NAME} ./MovieApp"
+                }
             }
         }
 
         stage('Run Docker Container') {
             steps {
-                bat '''
-                docker stop movie-container >nul 2>&1
-                docker rm movie-container >nul 2>&1
-                docker run -d -p 7000:7000 --name movie-container movie-api
-                '''
+                script {
+                    // Stop and remove existing container if running
+                    sh """
+                        if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                            docker rm -f ${CONTAINER_NAME}
+                        fi
+                    """
+
+                    // Run the container
+                    sh "docker run -d -p ${PORT}:${PORT} ${IMAGE_NAME}"
+                }
             }
         }
 
         stage('Verify Container') {
             steps {
-                bat 'docker ps'
+                sh "docker ps"
             }
         }
     }
 
     post {
+        success {
+            echo "Movie API container is running on port ${PORT}"
+        }
         failure {
-            echo 'Pipeline failed. Check logs.'
+            echo "Pipeline failed. Check logs."
         }
     }
 }
-
