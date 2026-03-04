@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     // Stop and remove existing container if running
-                    sh """
+                    bat """
                         if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
                             docker rm -f ${CONTAINER_NAME}
                         fi
@@ -55,5 +55,6 @@ pipeline {
         }
     }
 }
+
 
 
